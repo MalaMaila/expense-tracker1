@@ -8,7 +8,7 @@
     :root {
       --bg-color: #f4f6f8;
       --card-bg: #ffffff;
-      --primary: #d9534f; /* Expense theme (warm red) */
+      --primary: #d9534f; /* Expense warm red theme */
       --primary-hover: #c9302c;
       --text: #333333;
       --border: #cccccc;
@@ -146,8 +146,8 @@
   </div>
 
   <script>
-    // REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-    const SCRIPT_URL = https://script.google.com/macros/s/AKfycbyO9A1gj-Bek0jFT5FiMEm7nh4vzExZiJ8-9nNTrTjcy8a_5neYSw5-gUArJZR9Mfap/exec;
+    // Your Apps Script URL is integrated here:
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxtz2_GGgsUmAAqkWD9aePKKoAGAe1torNwGUXQRlkU_XTHQVslA2Fxh_NhKBHtYJ2E/exec";
 
     const form = document.getElementById('expenseForm');
     const submitBtn = document.getElementById('submitBtn');
@@ -174,7 +174,6 @@
       };
 
       try {
-        // Mode 'no-cors' prevents CORS issues when posting directly to Google Apps Script
         await fetch(SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
