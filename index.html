@@ -8,7 +8,7 @@
     :root {
       --bg-color: #f4f6f8;
       --card-bg: #ffffff;
-      --primary: #d9534f; /* Expense warm red theme */
+      --primary: #d9534f;
       --primary-hover: #c9302c;
       --text: #333333;
       --border: #cccccc;
@@ -88,24 +88,12 @@
       background-color: var(--primary-hover);
     }
 
-    button:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
-    }
-
     .status {
       margin-top: 15px;
       text-align: center;
       font-weight: 600;
       font-size: 0.95rem;
-    }
-
-    .status.success {
       color: #2e7d32;
-    }
-
-    .status.error {
-      color: #c62828;
     }
   </style>
 </head>
@@ -114,7 +102,8 @@
   <div class="container">
     <h2>Record Expense</h2>
     
-    <form id="expenseForm">
+    <!-- Form targets the hidden iframe so the page doesn't navigate away -->
+    <form id="expenseForm" action="https://script.google.com/macros/s/AKfycbxtz2_GGgsUmAAqkWD9aePKKoAGAe1torNwGUXQRlkU_XTHQVslA2Fxh_NhKBHtYJ2E/exec" method="POST" target="hidden_iframe">
       <div class="form-group">
         <label for="item">Item Description</label>
         <input 
@@ -145,57 +134,27 @@
     <div id="statusMessage" class="status"></div>
   </div>
 
+  <!-- Hidden iframe to capture the form submission response silently -->
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="submitted()"></iframe>
+
   <script>
-    // Your Apps Script URL is integrated here:
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxtz2_GGgsUmAAqkWD9aePKKoAGAe1torNwGUXQRlkU_XTHQVslA2Fxh_NhKBHtYJ2E/exec";
+    let isSubmitted = false;
 
-    const form = document.getElementById('expenseForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const statusMessage = document.getElementById('statusMessage');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const item = document.getElementById('item').value.trim();
-      const price = document.getElementById('price').value;
-
-      if (!item || !price) return;
-
-      // Disable button & show loading state
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting...';
-      statusMessage.textContent = '';
-      statusMessage.className = 'status';
-
-      const payload = {
-        item: item,
-        price: price,
-        type: "Expense"
-      };
-
-      try {
-        await fetch(SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-
-        // Show success message & reset inputs
-        statusMessage.textContent = 'Expense recorded successfully!';
-        statusMessage.classList.add('success');
-        form.reset();
-      } catch (error) {
-        console.error('Error submitting expense:', error);
-        statusMessage.textContent = 'Failed to submit. Please try again.';
-        statusMessage.classList.add('error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Finalize';
-      }
+    document.getElementById('expenseForm').addEventListener('submit', function() {
+      isSubmitted = true;
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('submitBtn').textContent = 'Submitting...';
     });
+
+    function submitted() {
+      if (isSubmitted) {
+        document.getElementById('statusMessage.textContent = 'Expense recorded successfully!';
+        document.getElementById('expenseForm').reset();
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = 'Finalize';
+        isSubmitted = false;
+      }
+    }
   </script>
 
 </body>
