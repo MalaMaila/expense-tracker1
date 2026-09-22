@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Record Expense</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f8;
+      --card-bg: #ffffff;
+      --primary: #d9534f; /* Expense theme (warm red) */
+      --primary-hover: #c9302c;
+      --text: #333333;
+      --border: #cccccc;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      text-align: center;
+      color: #222;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus {
+      border-color: var(--primary);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.05rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .status.success {
+      color: #2e7d32;
+    }
+
+    .status.error {
+      color: #c62828;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Record Expense</h2>
+    
+    <form id="expenseForm">
+      <div class="form-group">
+        <label for="item">Item Description</label>
+        <input 
+          type="text" 
+          id="item" 
+          name="item" 
+          placeholder="e.g. chicken meat" 
+          required 
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="price">Price</label>
+        <input 
+          type="number" 
+          id="price" 
+          name="price" 
+          step="0.01" 
+          placeholder="0.00" 
+          required 
+        />
+      </div>
+
+      <button type="submit" id="submitBtn">Finalize</button>
+    </form>
+
+    <div id="statusMessage" class="status"></div>
+  </div>
+
+  <script>
+    // REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+    const SCRIPT_URL = "YOUR_WEB_APP_URL_HERE";
+
+    const form = document.getElementById('expenseForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMessage = document.getElementById('statusMessage');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const item = document.getElementById('item').value.trim();
+      const price = document.getElementById('price').value;
+
+      if (!item || !price) return;
+
+      // Disable button & show loading state
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      statusMessage.textContent = '';
+      statusMessage.className = 'status';
+
+      const payload = {
+        item: item,
+        price: price,
+        type: "Expense"
+      };
+
+      try {
+        // Mode 'no-cors' prevents CORS issues when posting directly to Google Apps Script
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        // Show success message & reset inputs
+        statusMessage.textContent = 'Expense recorded successfully!';
+        statusMessage.classList.add('success');
+        form.reset();
+      } catch (error) {
+        console.error('Error submitting expense:', error);
+        statusMessage.textContent = 'Failed to submit. Please try again.';
+        statusMessage.classList.add('error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Finalize';
+      }
+    });
+  </script>
+
+</body>
+</html>
