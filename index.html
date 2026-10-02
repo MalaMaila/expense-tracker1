@@ -94,7 +94,7 @@
     <h2>Add Expense</h2>
     <form id="expenseForm">
       <div class="form-group">
-        <label for="expenseDate">Expense Date</label>
+        <label for="expenseDate">Expense Date 🔒</label>
         <input type="date" id="expenseDate" required>
       </div>
 
@@ -128,11 +128,31 @@
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1K2OQ2aQbNP_8VQKgHkbx1sq0lQOg7x3ENS5aiq6s4VKlbVldkABLQ41Rzxh-vV31/exec";
+    
+    // Define the secret PIN required to change the date
+    const REQUIRED_PIN = "3232";
 
-    // Set today's date automatically on page load (YYYY-MM-DD)
     const dateInput = document.getElementById('expenseDate');
     const today = new Date().toISOString().split('T')[0];
+    
+    // Set initial date to today
     dateInput.value = today;
+    let lastValidDate = today;
+
+    // Monitor changes to the date field and require PIN
+    dateInput.addEventListener('change', function() {
+      if (this.value !== lastValidDate) {
+        const userPin = prompt("Enter PIN to change the expense date:");
+        
+        if (userPin === REQUIRED_PIN) {
+          lastValidDate = this.value;
+          alert("Date unlocked!");
+        } else {
+          alert("Incorrect PIN! Resetting to previous date.");
+          this.value = lastValidDate;
+        }
+      }
+    });
 
     // Form submit listener
     document.getElementById('expenseForm').addEventListener('submit', function(e) {
@@ -156,7 +176,7 @@
         method: "POST",
         mode: "no-cors",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "text/plain;charset=utf-8"
         },
         body: JSON.stringify(payload)
       })
@@ -164,11 +184,14 @@
         statusDiv.textContent = "Expense added successfully!";
         statusDiv.style.color = "#2f855a";
         
-        // Reset form inputs except date input (keep today's date)
+        // Reset form inputs
         document.getElementById('itemName').value = '';
         document.getElementById('price').value = '';
         document.getElementById('category').value = '';
+        
+        // Reset date to today
         dateInput.value = today;
+        lastValidDate = today;
         
         submitBtn.disabled = false;
       })
