@@ -152,6 +152,31 @@
       <button type="submit" id="submitBtn">Submit Expense</button>
     </form>
     <div id="status"></div>
+
+    <!-- Recent Expenses Section -->
+    <div id="recentSection" style="display: none; margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 style="margin: 0; font-size: 1.1rem; color: #2d3748;">Added Expenses</h3>
+        <button type="button" id="clearListBtn" style="background: #e53e3e; color: white; border: none; padding: 0.35rem 0.65rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Clear List</button>
+      </div>
+      <div style="max-height: 200px; overflow-y: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+          <thead>
+            <tr style="text-align: left; border-bottom: 2px solid #edf2f7; color: #718096;">
+              <th style="padding: 0.4rem;">Date</th>
+              <th style="padding: 0.4rem;">Item</th>
+              <th style="padding: 0.4rem;">Cat.</th>
+              <th style="padding: 0.4rem; text-align: right;">Price</th>
+            </tr>
+          </thead>
+          <tbody id="expenseListBody"></tbody>
+        </table>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-weight: 700; margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid #edf2f7; color: #2d3748; font-size: 0.95rem;">
+        <span>Total:</span>
+        <span id="totalAmount">฿0.00</span>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -206,14 +231,11 @@
       if (this.value === lastValidDate) return;
 
       if (isUnlocked()) {
-        // Already unlocked within 30 mins — accept change without PIN prompt
         lastValidDate = this.value;
       } else {
-        // Prompt for PIN
         const userPin = prompt("Enter PIN to unlock date changes for 30 minutes:");
         
         if (userPin === REQUIRED_PIN) {
-          // Store unlock timestamp
           localStorage.setItem('date_unlock_timestamp', new Date().getTime().toString());
           lastValidDate = this.value;
           updateLockUI();
@@ -225,8 +247,61 @@
       }
     });
 
-    // Check status on page load
+    // Check lock status on page load
     updateLockUI();
+
+    // --- Local Expense History & Display Logic ---
+    const recentSection = document.getElementById('recentSection');
+    const expenseListBody = document.getElementById('expenseListBody');
+    const totalAmountEl = document.getElementById('totalAmount');
+    const clearListBtn = document.getElementById('clearListBtn');
+
+    function getStoredExpenses() {
+      return JSON.parse(localStorage.getItem('tracked_expenses') || '[]');
+    }
+
+    function saveAndRenderExpenses(expenses) {
+      localStorage.setItem('tracked_expenses', JSON.stringify(expenses));
+      renderExpenseList();
+    }
+
+    function renderExpenseList() {
+      const expenses = getStoredExpenses();
+      
+      if (expenses.length === 0) {
+        recentSection.style.display = 'none';
+        return;
+      }
+
+      recentSection.style.display = 'block';
+      expenseListBody.innerHTML = '';
+      let total = 0;
+
+      expenses.forEach(item => {
+        total += item.price;
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #f7fafc';
+        row.innerHTML = `
+          <td style="padding: 0.4rem; color: #718096; white-space: nowrap;">${item.expenseDate}</td>
+          <td style="padding: 0.4rem; color: #2d3748;">${item.itemName}</td>
+          <td style="padding: 0.4rem; color: #718096;">${item.category}</td>
+          <td style="padding: 0.4rem; text-align: right; font-weight: 600; color: #2d3748;">฿${item.price.toFixed(2)}</td>
+        `;
+        expenseListBody.appendChild(row);
+      });
+
+      totalAmountEl.textContent = `฿${total.toFixed(2)}`;
+    }
+
+    clearListBtn.addEventListener('click', function() {
+      if (confirm("Are you sure you want to clear the local list display? (This does not delete data already submitted to Google Sheets)")) {
+        localStorage.removeItem('tracked_expenses');
+        renderExpenseList();
+      }
+    });
+
+    // Render local list on page load
+    renderExpenseList();
 
     // Form submission
     document.getElementById('expenseForm').addEventListener('submit', function(e) {
@@ -258,12 +333,16 @@
         statusDiv.textContent = "Expense added successfully!";
         statusDiv.style.color = "#2f855a";
         
+        // Save entry locally and refresh table
+        const currentExpenses = getStoredExpenses();
+        currentExpenses.push(payload);
+        saveAndRenderExpenses(currentExpenses);
+
         // Reset form fields except date
         document.getElementById('itemName').value = '';
         document.getElementById('price').value = '';
         document.getElementById('category').value = '';
         
-        // Refresh lock UI display
         updateLockUI();
         submitBtn.disabled = false;
       })
